@@ -1,0 +1,21 @@
+# Ignore backend unwanted files and directories
+/backend/node_modules/
+/backend/build/
+/backend/dist/
+/backend/*.log
+/backend/.env
+/backend/logs/
+
+# Ignore frontend unwanted files and directories
+/frontend/node_modules/
+/frontend/build/
+/frontend/dist/
+/frontend/*.log
+/frontend/.env
+/frontend/logs/
+
+# General OS files and editor backups
+.DS_Store
+Thumbs.db
+*.tmp
+*~
