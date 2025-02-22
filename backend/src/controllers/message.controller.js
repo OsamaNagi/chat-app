@@ -24,5 +24,38 @@ export const getMessages = async (req, res) => {
 				{ sender: userToChatId, receiver: myId },
 			],
 		});
-	} catch (error) {}
+
+		res.status(200).json(messages);
+	} catch (error) {
+		console.error('Error in getMessages: ', error.message);
+		res.status(500).json({ message: 'Internal server Error' });
+	}
+};
+
+export const sendMessage = async (req, res) => {
+	try {
+		const { text, image } = req.body;
+		const { id: receiverId } = req.params;
+		const senderId = req.user._id;
+
+		let imageUrl;
+		if (image) {
+			const response = await cloudinary.uploader.upload(image);
+			imageUrl = response.secure_url;
+		}
+
+		const newMessage = new Message({
+			senderId,
+			receiverId,
+			text,
+			image: imageUrl,
+		});
+
+		const savedMessage = await newMessage.save();
+
+		res.status(200).json(savedMessage);
+	} catch (error) {
+		console.error('Error in sendMessage: ', error.message);
+		res.status(500).json({ message: 'Internal server Error' });
+	}
 };
