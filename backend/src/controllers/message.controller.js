@@ -1,15 +1,18 @@
-import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
+import Message from '../models/message.model.js';
+
+import cloudinary from '../lib/cloudinary.js';
+import { getReceiverSocketId, io } from '../lib/socket.js';
 
 export const getUsersForSidebar = async (req, res) => {
 	try {
-		const loggedInUser = req.user._id;
-		const filteredUsers = await User.find({ _id: { $ne: loggedInUser } }).select('-password');
+		const loggedInUserId = req.user._id;
+		const filteredUsers = await User.find({ _id: { $ne: loggedInUserId } }).select('-password');
 
 		res.status(200).json(filteredUsers);
 	} catch (error) {
 		console.error('Error in getUsersForSidebar: ', error.message);
-		res.status(500).json({ message: 'Internal server Error' });
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
@@ -20,15 +23,15 @@ export const getMessages = async (req, res) => {
 
 		const messages = await Message.find({
 			$or: [
-				{ sender: myId, receiver: userToChatId },
-				{ sender: userToChatId, receiver: myId },
+				{ senderId: myId, receiverId: userToChatId },
+				{ senderId: userToChatId, receiverId: myId },
 			],
 		});
 
 		res.status(200).json(messages);
 	} catch (error) {
-		console.error('Error in getMessages: ', error.message);
-		res.status(500).json({ message: 'Internal server Error' });
+		console.log('Error in getMessages controller: ', error.message);
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };
 
@@ -40,8 +43,9 @@ export const sendMessage = async (req, res) => {
 
 		let imageUrl;
 		if (image) {
-			const response = await cloudinary.uploader.upload(image);
-			imageUrl = response.secure_url;
+			// Upload base64 image to cloudinary
+			const uploadResponse = await cloudinary.uploader.upload(image);
+			imageUrl = uploadResponse.secure_url;
 		}
 
 		const newMessage = new Message({
@@ -51,11 +55,16 @@ export const sendMessage = async (req, res) => {
 			image: imageUrl,
 		});
 
-		const savedMessage = await newMessage.save();
+		await newMessage.save();
 
-		res.status(200).json(savedMessage);
+		const receiverSocketId = getReceiverSocketId(receiverId);
+		if (receiverSocketId) {
+			io.to(receiverSocketId).emit('newMessage', newMessage);
+		}
+
+		res.status(201).json(newMessage);
 	} catch (error) {
-		console.error('Error in sendMessage: ', error.message);
-		res.status(500).json({ message: 'Internal server Error' });
+		console.log('Error in sendMessage controller: ', error.message);
+		res.status(500).json({ error: 'Internal server error' });
 	}
 };

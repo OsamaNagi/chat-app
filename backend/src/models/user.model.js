@@ -14,12 +14,11 @@ const userSchema = new mongoose.Schema(
 		password: {
 			type: String,
 			required: true,
-			minLength: 8,
+			minlength: 6,
 		},
-		avatar: {
+		profilePic: {
 			type: String,
 			default: '',
-			required: false,
 		},
 	},
 	{ timestamps: true },
