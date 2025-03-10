@@ -2,8 +2,6 @@
 
 A modern real-time chat application built with the MERN stack (MongoDB, Express.js, React, Node.js) and Socket.IO.
 
-![Reachable Screenshot](screenshot.png)
-
 ## Features
 
 - 🔐 User authentication (signup/login)
